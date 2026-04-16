@@ -1,199 +1,225 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Configuration
-    const REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes
-    const DEFAULT_LOCATION = { lat: 40.7128, lon: -74.0060, name: 'New York' }; // Fallback
+    const RSS_FEED_URL = 'https://static.espncricinfo.com/rss/livescores.xml';
+    const CORS_PROXY = 'https://api.cors.lol/?url=';
+    const REFRESH_INTERVAL = 60000; // 60 seconds
+    const LIVE_MATCH_ROTATION_INTERVAL = 10000; // 10 seconds per match
 
     // DOM Elements
     const elements = {
-        locationName: document.getElementById('location-name'),
-        currentTime: document.getElementById('current-time'),
-        currentDate: document.getElementById('current-date'),
-        currentTemp: document.getElementById('current-temp'),
-        weatherDescription: document.getElementById('weather-description'),
-        humidity: document.getElementById('humidity'),
-        windSpeed: document.getElementById('wind-speed'),
-        feelsLike: document.getElementById('feels-like'),
-        weatherIconLarge: document.getElementById('weather-icon-large'),
-        forecastList: document.getElementById('forecast-list'),
-        lastUpdated: document.getElementById('last-updated')
+        clock: document.getElementById('clock'),
+        date: document.getElementById('date'),
+        liveContainer: document.getElementById('live-match-container'),
+        matchesList: document.getElementById('matches-list'),
+        ticker: document.getElementById('ticker')
     };
 
     // State
     let state = {
-        lat: null,
-        lon: null,
-        name: 'Detecting...',
-        weatherData: null
+        matches: [],
+        currentIndex: 0,
+        rotationTimer: null
     };
 
-    // Weather Code Mapping (WMO Weather interpretation codes)
-    const weatherCodes = {
-        0: { description: 'Clear sky', icon: 'sun' },
-        1: { description: 'Mainly clear', icon: 'sun' },
-        2: { description: 'Partly cloudy', icon: 'cloud-sun' },
-        3: { description: 'Overcast', icon: 'cloud' },
-        45: { description: 'Fog', icon: 'cloud-fog' },
-        48: { description: 'Depositing rime fog', icon: 'cloud-fog' },
-        51: { description: 'Light drizzle', icon: 'cloud-drizzle' },
-        53: { description: 'Moderate drizzle', icon: 'cloud-drizzle' },
-        55: { description: 'Dense drizzle', icon: 'cloud-drizzle' },
-        61: { description: 'Slight rain', icon: 'cloud-rain' },
-        63: { description: 'Moderate rain', icon: 'cloud-rain' },
-        65: { description: 'Heavy rain', icon: 'cloud-rain' },
-        71: { description: 'Slight snow', icon: 'cloud-snow' },
-        73: { description: 'Moderate snow', icon: 'cloud-snow' },
-        75: { description: 'Heavy snow', icon: 'cloud-snow' },
-        77: { description: 'Snow grains', icon: 'cloud-snow' },
-        80: { description: 'Slight rain showers', icon: 'cloud-rain' },
-        81: { description: 'Moderate rain showers', icon: 'cloud-rain' },
-        82: { description: 'Violent rain showers', icon: 'cloud-rain' },
-        85: { description: 'Slight snow showers', icon: 'cloud-snow' },
-        86: { description: 'Heavy snow showers', icon: 'cloud-snow' },
-        95: { description: 'Thunderstorm', icon: 'cloud-lightning' },
-        96: { description: 'Thunderstorm with slight hail', icon: 'cloud-lightning' },
-        99: { description: 'Thunderstorm with heavy hail', icon: 'cloud-lightning' }
-    };
-
-    // Initialize App
-    async function init() {
+    // Initialize
+    function init() {
         updateClock();
         setInterval(updateClock, 1000);
 
-        try {
-            await detectLocation();
-        } catch (error) {
-            console.error('Location detection failed:', error);
-            state.lat = DEFAULT_LOCATION.lat;
-            state.lon = DEFAULT_LOCATION.lon;
-            state.name = DEFAULT_LOCATION.name;
-        }
+        fetchData();
+        setInterval(fetchData, REFRESH_INTERVAL);
 
-        fetchWeather();
-        setInterval(fetchWeather, REFRESH_INTERVAL);
+        // Start Lucide
+        if (window.lucide) {
+            lucide.createIcons();
+        }
     }
 
-    // Update Clock & Date
+    // Clock & Date
     function updateClock() {
         const now = new Date();
+        elements.clock.textContent = now.toLocaleTimeString('en-US', { hour12: false });
 
-        // Time
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        elements.currentTime.textContent = `${hours}:${minutes}`;
-
-        // Date
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        elements.currentDate.textContent = now.toLocaleDateString('en-US', options);
+        elements.date.textContent = now.toLocaleDateString('en-US', options);
     }
 
-    // Detect Location via IP
-    async function detectLocation() {
-        const response = await fetch('https://ipapi.co/json/');
-        const data = await response.json();
-
-        if (data.latitude && data.longitude) {
-            state.lat = data.latitude;
-            state.lon = data.longitude;
-            state.name = data.city || 'Your Location';
-            elements.locationName.textContent = state.name;
-        } else {
-            throw new Error('Invalid location data');
-        }
-    }
-
-    // Fetch Weather from Open-Meteo
-    async function fetchWeather() {
-        if (!state.lat || !state.lon) return;
-
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto`;
-
+    // Fetch Data from RSS
+    async function fetchData() {
         try {
-            const response = await fetch(url, { cache: 'no-store' });
+            const response = await fetch(`${CORS_PROXY}${encodeURIComponent(RSS_FEED_URL)}`, { cache: 'no-store' });
             const data = await response.json();
-            state.weatherData = data;
-            updateUI();
 
-            elements.lastUpdated.textContent = new Date().toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            if (data.contents) {
+                parseXML(data.contents);
+            }
         } catch (error) {
-            console.error('Weather fetch failed:', error);
+            console.error('Error fetching data:', error);
+            showError();
         }
     }
 
-    // Update UI with Weather Data
-    function updateUI() {
-        const current = state.weatherData.current;
-        const daily = state.weatherData.daily;
+    // Parse XML String
+    function parseXML(xmlString) {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+        const items = xmlDoc.getElementsByTagName("item");
 
-        // Update Current Weather
-        elements.currentTemp.textContent = Math.round(current.temperature_2m);
-        elements.humidity.textContent = `${current.relative_humidity_2m}%`;
-        elements.windSpeed.textContent = `${Math.round(current.wind_speed_10m)} km/h`;
-        elements.feelsLike.textContent = `${Math.round(current.apparent_temperature)}°C`;
+        const newMatches = [];
+        for (let i = 0; i < items.length; i++) {
+            const titleElement = items[i].getElementsByTagName("title")[0];
+            const descriptionElement = items[i].getElementsByTagName("description")[0];
 
-        const weatherInfo = weatherCodes[current.weather_code] || { description: 'Unknown', icon: 'help-circle' };
-        elements.weatherDescription.textContent = weatherInfo.description;
+            if (!titleElement) continue;
 
-        // Large Weather Icon
-        elements.weatherIconLarge.innerHTML = `<i data-lucide="${weatherInfo.icon}"></i>`;
+            const title = titleElement.textContent;
+            const description = descriptionElement ? descriptionElement.textContent : "";
 
-        // Forecast
-        updateForecast(daily);
+            newMatches.push({
+                title: title.trim(),
+                description: description.trim(),
+                isLive: title.includes('*') || title.match(/\d+\//)
+            });
+        }
 
-        // Re-initialize Lucide Icons
-        lucide.createIcons();
+        state.matches = newMatches;
+        updateUI();
     }
 
-    // Update Forecast List
-    function updateForecast(daily) {
-        elements.forecastList.innerHTML = '';
+    // Update UI
+    function updateUI() {
+        if (state.matches.length === 0) {
+            showNoMatches();
+            return;
+        }
 
-        for (let i = 1; i < daily.time.length; i++) {
-            const date = new Date(daily.time[i]);
-            const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-            const weatherInfo = weatherCodes[daily.weather_code[i]] || { description: 'Unknown', icon: 'help-circle' };
-            const tempMax = Math.round(daily.temperature_2m_max[i]);
-            const tempMin = Math.round(daily.temperature_2m_min[i]);
-
-            const forecastItem = document.createElement('div');
-            forecastItem.className = 'forecast-item';
-            forecastItem.innerHTML = `
-                <div class="forecast-day">${dayName}</div>
-                <div class="forecast-icon">
-                    <i data-lucide="${weatherInfo.icon}"></i>
-                </div>
-                <div class="forecast-temp">
-                    <span class="temp-max">${tempMax}°</span>
-                    <span class="temp-min">${tempMin}°</span>
+        // Update Side List
+        elements.matchesList.innerHTML = '';
+        state.matches.forEach((match, index) => {
+            const div = document.createElement('div');
+            div.className = `match-item ${index === state.currentIndex ? 'active' : ''}`;
+            div.innerHTML = `
+                <div class="match-item-title">
+                    ${match.isLive ? '<span class="live-indicator"></span>' : ''}
+                    ${match.title}
                 </div>
             `;
-            elements.forecastList.appendChild(forecastItem);
+            elements.matchesList.appendChild(div);
+        });
+
+        // Update Ticker with all matches
+        const tickerText = state.matches.map(m => m.title).join(' • ');
+        elements.ticker.textContent = tickerText + ' • ' + tickerText;
+
+        // Start/Restart Rotation for Live Card
+        startRotation();
+    }
+
+    // Rotate through matches on the main card
+    function startRotation() {
+        if (state.rotationTimer) clearInterval(state.rotationTimer);
+
+        if (state.matches.length > 0) {
+            displayMatch(state.currentIndex % state.matches.length);
+
+            state.rotationTimer = setInterval(() => {
+                state.currentIndex = (state.currentIndex + 1) % state.matches.length;
+                displayMatch(state.currentIndex);
+            }, LIVE_MATCH_ROTATION_INTERVAL);
         }
     }
 
-    // Local Storage Fallback
-    function saveToStorage() {
-        localStorage.setItem('weather_state', JSON.stringify({
-            lat: state.lat,
-            lon: state.lon,
-            name: state.name
-        }));
-    }
+    // Display a specific match on the main card
+    function displayMatch(index) {
+        const match = state.matches[index];
+        if (!match) return;
 
-    function loadFromStorage() {
-        const saved = localStorage.getItem('weather_state');
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            state.lat = parsed.lat;
-            state.lon = parsed.lon;
-            state.name = parsed.name;
-            elements.locationName.textContent = state.name;
+        // Update active state in sidebar
+        const matchItems = elements.matchesList.querySelectorAll('.match-item');
+        matchItems.forEach((item, i) => {
+            if (i === index) {
+                item.classList.add('active');
+                // Scroll into view if needed
+                item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                item.classList.remove('active');
+            }
+        });
+
+        let teamA = "Team A";
+        let teamB = "Team B";
+        let score = "";
+
+        if (match.title.includes(' v ')) {
+            const parts = match.title.split(' v ');
+            let partA = parts[0];
+            let partB = parts[1];
+            let scoreA = "";
+            let scoreB = "";
+
+            // Regex for score extraction: matches "Team Name 123/4" or "Team Name 123"
+            const scoreRegex = /(.*?)\s(\d+\/\d+.*|\d+\s.*)/;
+
+            const matchA = partA.match(scoreRegex);
+            if (matchA) {
+                teamA = matchA[1];
+                scoreA = matchA[2];
+            } else {
+                teamA = partA;
+            }
+
+            const matchB = partB.match(scoreRegex);
+            if (matchB) {
+                teamB = matchB[1];
+                scoreB = matchB[2];
+            } else {
+                teamB = partB;
+            }
+
+            score = scoreA || scoreB;
         }
+
+        elements.liveContainer.innerHTML = `
+            <div class="match-info-header">
+                <div class="series-name">CRICKET LIVE</div>
+            </div>
+            <div class="teams-display">
+                <div class="team">
+                    <div class="team-name">${teamA.replace('*', '').trim()}</div>
+                </div>
+                <div class="vs-badge">
+                    <div class="vs-text">VS</div>
+                    ${score ? `<div class="vs-score">${score.replace('*', '').trim()}</div>` : ''}
+                </div>
+                <div class="team">
+                    <div class="team-name">${teamB.trim()}</div>
+                </div>
+            </div>
+            <div class="match-status">
+                ${match.isLive ? 'MATCH IN PROGRESS' : 'UPCOMING MATCH'}
+            </div>
+        `;
     }
 
-    // Start the app
-    loadFromStorage();
+    function showError() {
+        elements.liveContainer.innerHTML = `
+            <div class="loading-state">
+                <i data-lucide="alert-circle" style="width: 48px; height: 48px; color: var(--accent);"></i>
+                <p>Unable to fetch live scores. Please check connection.</p>
+            </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function showNoMatches() {
+        elements.liveContainer.innerHTML = `
+            <div class="loading-state">
+                <i data-lucide="calendar-off" style="width: 48px; height: 48px; color: var(--secondary);"></i>
+                <p>No matches found at the moment.</p>
+            </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+    }
+
     init();
 });

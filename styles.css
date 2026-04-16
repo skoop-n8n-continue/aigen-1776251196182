@@ -3,9 +3,12 @@
     --dark: #10181f;
     --light: #ffffff;
     --secondary: #6a7071;
+    --accent: #ff4757;
     --bg-gradient: linear-gradient(135deg, #10181f 0%, #1a2a35 100%);
     --card-bg: rgba(255, 255, 255, 0.05);
-    --transition: all 0.3s ease;
+    --border: rgba(255, 255, 255, 0.1);
+    --font-heading: 'Big Shoulders Display', sans-serif;
+    --font-body: 'Outfit', sans-serif;
 }
 
 * {
@@ -15,7 +18,7 @@
 }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-body);
     background-color: var(--dark);
     color: var(--light);
     height: 100vh;
@@ -26,160 +29,195 @@ body {
     align-items: center;
 }
 
-.dashboard {
+.app-container {
     width: 100%;
     height: 100%;
     background: var(--bg-gradient);
-    display: flex;
-    flex-direction: column;
-    padding: 2rem;
-    position: relative;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+        "header header"
+        "main sidebar"
+        "footer footer";
+    gap: 1.5rem;
+    padding: 1.5rem;
 }
 
+/* Header Styling */
 .header {
+    grid-area: header;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 2rem;
-}
-
-.location-container {
-    display: flex;
     align-items: center;
-    gap: 0.75rem;
-}
-
-.location-container h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-}
-
-.icon-teal {
-    color: var(--primary);
-    width: 32px;
-    height: 32px;
-}
-
-.datetime-container {
-    text-align: right;
-}
-
-#current-time {
-    font-size: 3rem;
-    font-weight: 700;
-    color: var(--primary);
-    line-height: 1;
-}
-
-#current-date {
-    font-size: 1.2rem;
-    color: var(--secondary);
-    margin-top: 0.5rem;
-}
-
-.weather-grid {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    min-height: 0;
-}
-
-.current-weather {
+    padding: 1rem 1.5rem;
     background: var(--card-bg);
-    border-radius: 2rem;
-    padding: 3rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    border: 1px solid var(--border);
 }
 
-.weather-main-info {
+.logo {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    text-align: center;
-    margin-bottom: 3rem;
+    gap: 1rem;
 }
 
-.weather-icon-container {
-    margin-bottom: 1rem;
-}
-
-.weather-icon-container i {
-    width: 120px;
-    height: 120px;
+.logo i {
+    width: 40px;
+    height: 40px;
     color: var(--primary);
 }
 
-.temp-container {
-    font-size: 8rem;
-    font-weight: 700;
-    line-height: 1;
-    display: flex;
-    align-items: flex-start;
-}
-
-.temp-container .unit {
-    font-size: 3rem;
-    margin-top: 1rem;
-    color: var(--secondary);
-}
-
-.description {
-    font-size: 2rem;
-    color: var(--secondary);
-    text-transform: capitalize;
-    margin-top: 0.5rem;
-}
-
-.weather-details {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
-}
-
-.detail-item {
-    background: rgba(255, 255, 255, 0.03);
-    padding: 1.5rem;
-    border-radius: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.detail-item i {
-    width: 24px;
-    height: 24px;
-    color: var(--primary);
-}
-
-.detail-label {
-    font-size: 0.9rem;
-    color: var(--secondary);
-}
-
-.detail-value {
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-
-.forecast {
-    display: flex;
-    flex-direction: column;
-}
-
-.section-title {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-    color: var(--secondary);
-    text-transform: uppercase;
+.logo-text {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    font-weight: 900;
     letter-spacing: 2px;
 }
 
-.forecast-list {
+.logo-text span {
+    color: var(--primary);
+}
+
+.clock-section {
+    text-align: right;
+}
+
+#clock {
+    font-family: var(--font-heading);
+    font-size: 3rem;
+    color: var(--primary);
+    line-height: 1;
+}
+
+#date {
+    font-size: 1.1rem;
+    color: var(--secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Main Content - Live Match */
+.main-content {
+    grid-area: main;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.section-label {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: var(--secondary);
+    letter-spacing: 3px;
+    padding-left: 0.5rem;
+}
+
+.live-match-card {
+    flex: 1;
+    background: var(--card-bg);
+    border-radius: 1.5rem;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.match-info-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.series-name {
+    color: var(--primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.teams-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    margin-bottom: 2rem;
+}
+
+.team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.team-name {
+    font-family: var(--font-heading);
+    font-size: 3.5rem;
+    font-weight: 900;
+    text-align: center;
+}
+
+.team-score {
+    font-family: var(--font-heading);
+    font-size: 5rem;
+    color: var(--primary);
+    line-height: 1;
+}
+
+.vs-badge {
+    background: var(--primary);
+    color: var(--dark);
+    padding: 1rem;
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.vs-text {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.vs-score {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-top: 0.5rem;
+}
+
+.match-status {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-align: center;
+    padding: 1rem 2rem;
+    background: rgba(255, 71, 87, 0.1);
+    border-radius: 2rem;
+}
+
+/* Sidebar - Other Matches */
+.sidebar {
+    grid-area: sidebar;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 0;
+}
+
+.matches-list {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -187,102 +225,144 @@ body {
     padding-right: 0.5rem;
 }
 
-.forecast-item {
+.match-item {
     background: var(--card-bg);
-    padding: 1.25rem 2rem;
-    border-radius: 1.25rem;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    border: 1px solid var(--border);
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
 }
 
-.forecast-day {
-    font-size: 1.2rem;
-    font-weight: 600;
-    width: 120px;
+.match-item.active {
+    border-color: var(--primary);
+    background: rgba(0, 183, 175, 0.1);
+    transform: scale(1.02);
 }
 
-.forecast-icon {
-    color: var(--primary);
-}
-
-.forecast-temp {
-    display: flex;
-    gap: 1rem;
-    font-size: 1.2rem;
-}
-
-.temp-max {
+.match-item-title {
     font-weight: 700;
+    font-size: 1.1rem;
 }
 
-.temp-min {
+.match-item-desc {
+    font-size: 0.95rem;
     color: var(--secondary);
 }
 
+.live-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-right: 5px;
+    box-shadow: 0 0 10px var(--accent);
+    animation: pulse 1.5s infinite;
+}
+
+/* Footer - Ticker */
 .footer {
-    margin-top: 2rem;
+    grid-area: footer;
+    background: var(--card-bg);
+    border-radius: 1rem;
+    border: 1px solid var(--border);
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    color: var(--secondary);
-    font-size: 0.9rem;
+    padding: 0.75rem 1.5rem;
+    overflow: hidden;
 }
 
-.branding {
-    font-weight: 700;
-    color: var(--primary);
-    letter-spacing: 1px;
+.ticker-label {
+    background: var(--primary);
+    color: var(--dark);
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    font-family: var(--font-heading);
+    font-weight: 900;
+    margin-right: 1.5rem;
+    white-space: nowrap;
+}
+
+.ticker-wrapper {
+    flex: 1;
+    overflow: hidden;
+}
+
+.ticker {
+    display: inline-block;
+    white-space: nowrap;
+    padding-left: 100%;
+    animation: ticker 30s linear infinite;
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+/* Animations & Utilities */
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes ticker {
+    0% { transform: translate3d(0, 0, 0); }
+    100% { transform: translate3d(-100%, 0, 0); }
+}
+
+.loading-state {
+    text-align: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid var(--card-bg);
+    border-top: 5px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Scrollbar styling */
-.forecast-list::-webkit-scrollbar {
+.matches-list::-webkit-scrollbar {
     width: 6px;
 }
 
-.forecast-list::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.02);
+.matches-list::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-.forecast-list::-webkit-scrollbar-thumb {
+.matches-list::-webkit-scrollbar-thumb {
     background: var(--primary);
     border-radius: 10px;
 }
 
-/* Responsiveness for different signage aspect ratios */
+/* Responsive Design */
 @media (max-aspect-ratio: 1/1) {
-    .weather-grid {
+    .app-container {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto 1fr auto;
+        grid-template-areas:
+            "header"
+            "main"
+            "sidebar"
+            "footer";
     }
 
-    .current-weather {
-        padding: 2rem;
-    }
-
-    .temp-container {
-        font-size: 6rem;
-    }
+    .team-name { font-size: 2.5rem; }
+    .team-score { font-size: 3.5rem; }
 }
 
 @media (max-width: 768px) {
-    .dashboard {
-        padding: 1rem;
-    }
-
-    .header {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: 1rem;
-    }
-
-    .datetime-container {
-        text-align: center;
-    }
-
-    .temp-container {
-        font-size: 5rem;
-    }
+    .logo-text { font-size: 1.8rem; }
+    #clock { font-size: 2.2rem; }
+    .teams-display { gap: 1rem; }
 }

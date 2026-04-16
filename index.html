@@ -1,85 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="manifest" href="./manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather Dashboard</title>
+    <title>Cricket Live Dashboard</title>
+    <!-- Cache Control -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <link rel="stylesheet" href="styles.css?v=w1e2a3">
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="styles.css?v=crk102">
 </head>
 <body>
-    <div id="app" class="dashboard">
-        <div class="main-content">
-            <header class="header">
-                <div class="location-container">
-                    <i data-lucide="map-pin" class="icon-teal"></i>
-                    <h1 id="location-name">Loading...</h1>
-                </div>
-                <div class="datetime-container">
-                    <div id="current-time">00:00</div>
-                    <div id="current-date">Loading...</div>
-                </div>
-            </header>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i data-lucide="trophy" class="icon-primary"></i>
+                <div class="logo-text">CRICKET<span>LIVE</span></div>
+            </div>
+            <div class="clock-section">
+                <div id="clock">00:00:00</div>
+                <div id="date">Thursday, April 16, 2026</div>
+            </div>
+        </header>
 
-            <main class="weather-grid">
-                <section class="current-weather">
-                    <div class="weather-main-info">
-                        <div id="weather-icon-large" class="weather-icon-container">
-                            <!-- Weather icon will be injected here -->
-                        </div>
-                        <div class="temp-container">
-                            <span id="current-temp">--</span><span class="unit">°C</span>
-                        </div>
-                        <div id="weather-description" class="description">--</div>
-                    </div>
-                    <div class="weather-details">
-                        <div class="detail-item">
-                            <i data-lucide="droplets"></i>
-                            <span class="detail-label">Humidity</span>
-                            <span id="humidity" class="detail-value">--%</span>
-                        </div>
-                        <div class="detail-item">
-                            <i data-lucide="wind"></i>
-                            <span class="detail-label">Wind</span>
-                            <span id="wind-speed" class="detail-value">-- km/h</span>
-                        </div>
-                        <div class="detail-item">
-                            <i data-lucide="thermometer"></i>
-                            <span class="detail-label">Feels Like</span>
-                            <span id="feels-like" class="detail-value">--°C</span>
-                        </div>
-                    </div>
-                </section>
+        <!-- Main Scoreboard -->
+        <main class="main-content">
+            <div class="section-label">LIVE MATCH</div>
+            <div id="live-match-container" class="live-match-card">
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Fetching Live Scores...</p>
+                </div>
+            </div>
+        </main>
 
-                <section class="forecast">
-                    <h2 class="section-title">7-Day Forecast</h2>
-                    <div id="forecast-list" class="forecast-list">
-                        <!-- Forecast items will be injected here -->
-                    </div>
-                </section>
-            </main>
-        </div>
+        <!-- Other Matches Section -->
+        <section class="sidebar">
+            <div class="section-label">OTHER MATCHES</div>
+            <div id="matches-list" class="matches-list">
+                <!-- Matches will be populated here -->
+            </div>
+        </section>
+
+        <!-- Footer / Ticker -->
         <footer class="footer">
-            <div class="update-info">Last updated: <span id="last-updated">Just now</span></div>
-            <div class="branding">Skoop Weather</div>
+            <div class="ticker-label">NEWS TICKER</div>
+            <div class="ticker-wrapper">
+                <div id="ticker" class="ticker">
+                    Welcome to Skoop Cricket Live. Stay tuned for live updates from around the world!
+                </div>
+            </div>
         </footer>
     </div>
-    <script src="script.js?v=w1e2a3"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js')
-          .then(function (reg) { console.log('[PWA] SW registered:', reg.scope); })
-          .catch(function (err) { console.warn('[PWA] SW registration failed:', err); });
-      });
-    }
-  </script>
+
+    <script src="script.js?v=crk102"></script>
 </body>
 </html>
